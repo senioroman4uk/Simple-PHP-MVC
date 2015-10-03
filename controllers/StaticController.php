@@ -2,7 +2,6 @@
 namespace controllers;
 
 use Core\Controller;
-use Core\View;
 
 class StaticController extends Controller
 {

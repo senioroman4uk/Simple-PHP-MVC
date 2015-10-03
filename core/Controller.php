@@ -8,7 +8,7 @@ class Controller
     }
 
     /**
-     * @param $view name, or absolute pass to view
+     * @param $view string, name or absolute pass to view
      * @param array | null $data , data that have to be passed to view
      */
     protected function render($view, $data = null)

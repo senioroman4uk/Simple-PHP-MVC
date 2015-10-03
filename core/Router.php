@@ -17,7 +17,8 @@ class Router
     public static function getInstance()
     {
         if (!isset(self::$instance)) {
-            require_once('config/routes.php');
+            require_once('/config/routes.php');
+            /** @var array $config */
             self::$instance = new Router($config['routes']);
         }
         return self::$instance;
@@ -42,10 +43,10 @@ class Router
 
             if (preg_match($regex, $_SERVER['REQUEST_URI'])) {
                 $route = explode('/', $route);
-                if (count($route) < 2)
+                if (count($route) != 2)
                     throw new \Exception('error, wrong route parameters, format: <ControllerName>/<ActionName>>');
-
-                self::execute($route[0], $route[1], array_slice($route, 2));
+                //TODO: pass url params
+                self::execute($route[0], $route[1], []);
                 return;
             }
         }
@@ -55,7 +56,7 @@ class Router
 
     private static function execute($controllerName, $actionName, $parameters = [])
     {
-        require("controllers/$controllerName.php");
+        require("/controllers/$controllerName.php");
         $controllerName = "controllers\\$controllerName";
         $controller = new $controllerName();
         if (!method_exists($controllerName, $actionName))
