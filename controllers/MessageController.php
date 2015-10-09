@@ -15,35 +15,28 @@ class MessageController extends Controller
 {
     public function create()
     {
+        $options = [
+            "name" => ["filter" => FILTER_SANITIZE_STRING],
+            "email" => ["filter" => FILTER_VALIDATE_EMAIL],
+            "message" => ["filter" => FILTER_SANITIZE_STRING]
+        ];
+        $values = filter_input_array(INPUT_POST, $options);
+        $values = array_map('trim', $values);
         $errors = [];
-        $values = [];
-        $keys = ['name', 'email', 'message'];
         $hadError = false;
-        try {
-            foreach ($keys as $key)
-                if (!array_key_exists($key, $_POST)) {
-                    $errors[$key] = 'Not specified';
-                    $hadError = true;
-                } else
-                    $values[$key] = $_POST[$key];
 
-            if (!$hadError) {
-                if (!filter_var($values['email'], FILTER_VALIDATE_EMAIL)) {
-                    $hadError = true;
-                    $errors['email'] = 'Invalid email';
-                }
-                if (!strlen($values['name'])) {
-                    $hadError = true;
-                    $errors['name'] = 'Too small';
-                }
-                if (strlen($values['message']) < 6) {
-                    $hadError = true;
-                    $errors['message'] = 'Too small, min length 6';
-                }
-            }
-        } catch (\Exception $e) {
+        if (!$values['email']) {
             $hadError = true;
-            $errors['exception'] = 'Unhandled exception';
+            $errors['email'] = 'Invalid email';
+        }
+
+        if (!strlen($values['name'])) {
+            $hadError = true;
+            $errors['name'] = 'Required';
+        }
+        if (strlen($values['message']) < 6) {
+            $hadError = true;
+            $errors['message'] = 'Too small, min length 6';
         }
 
 

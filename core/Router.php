@@ -50,8 +50,7 @@ class Router
                 return;
             }
         }
-        header("HTTP/1.0 404 Not Found");
-        echo '<b>Page not found</b>';
+        View::render404();
     }
 
     private static function execute($controllerName, $actionName, $parameters = [])

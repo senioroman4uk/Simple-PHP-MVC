@@ -1,8 +1,5 @@
 <form action="/formHandler" method="post">
-    <?php if (isset($errors) && !empty($errors)) {
-        if (array_key_exists('exception', $errors))
-            echo "<div class=\"error\">{$errors['exception']}</div>";
-        else
+    <?php if (!empty($errors)) {
             foreach ($errors as $key => $value)
                 echo "<div class=\"error\">$key: $value</div>";
     } else if ($name)
