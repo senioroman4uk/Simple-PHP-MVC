@@ -2,10 +2,10 @@
 namespace Core;
 class View
 {
-    static function render($viewName, $controllerName = null, $data = null)
+    static function render($viewName, $controllerName = null, $data = [])
     {
         //Converting data array to variables
-        if (is_array($data) && !empty($data))
+        if (!empty($data) && is_array($data))
             extract($data);
 
         // checking if path is absolute
@@ -20,9 +20,9 @@ class View
         include('/views/main.php');
     }
 
-    static function render404()
+    static function render404($data = [])
     {
         header("HTTP/1.0 404 Not Found", true, 404);
-        self::render('/404');
+        self::render('/404', null, $data);
     }
 }
