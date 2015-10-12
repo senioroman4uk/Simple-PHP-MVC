@@ -10,9 +10,16 @@ namespace controllers;
 
 
 use Core\Controller;
+use models\Message;
 
 class MessageController extends Controller
 {
+    function __construct()
+    {
+        parent::__construct();
+        $this->loadModel('messageModel');
+    }
+
     public function create()
     {
         $options = [
@@ -40,9 +47,18 @@ class MessageController extends Controller
         }
 
 
-        if (!$hadError)
-            $this->render('/static/contact', ['name' => $values['name'], 'previousValues' => []]);
-        else
+        if (!$hadError) {
+            $values['ip'] = $this->getRealIpAddress();
+            if ($this->models->messageModel->create(new Message($values)))
+                $this->render('/static/contact', ['name' => $values['name'], 'previousValues' => []]);
+            else
+                $this->render('/static/contact', ['errors' => ['database' => 'saving of message failed']]);
+        } else
             $this->render('/static/contact', ['errors' => $errors, 'previousValues' => $values]);
+    }
+
+    public function find($limit, $page)
+    {
+
     }
 }
