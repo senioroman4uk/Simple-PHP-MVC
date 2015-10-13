@@ -24,11 +24,14 @@ class MessageController extends Controller
     {
         $options = [
             "name" => ["filter" => FILTER_SANITIZE_STRING],
-            "email" => ["filter" => FILTER_VALIDATE_EMAIL],
+            "email" => ["filter" => FILTER_SANITIZE_EMAIL],
             "message" => ["filter" => FILTER_SANITIZE_STRING]
         ];
         $values = filter_input_array(INPUT_POST, $options);
-        $values = array_map('trim', $values);
+        if (!empty($values))
+            $values = array_map('trim', $values);
+        $values['email'] = filter_var($values['email'], FILTER_VALIDATE_EMAIL);
+
         $errors = [];
         $hadError = false;
 
@@ -46,7 +49,6 @@ class MessageController extends Controller
             $errors['message'] = 'Too small, min length 6';
         }
 
-
         if (!$hadError) {
             $values['ip'] = $this->getRealIpAddress();
             if ($this->models->messageModel->create(new Message($values)))
@@ -57,8 +59,32 @@ class MessageController extends Controller
             $this->render('/static/contact', ['errors' => $errors, 'previousValues' => $values]);
     }
 
-    public function find($limit, $page)
+    public function find()
     {
+        $options = [
+            'page' => FILTER_SANITIZE_NUMBER_INT,
+            'limit' => FILTER_SANITIZE_NUMBER_INT
+        ];
+        $values = filter_input_array(INPUT_GET, $options);
 
+        if (is_array($values)) {
+            $options['page'] = FILTER_VALIDATE_INT;
+            $options['limit'] = FILTER_VALIDATE_INT;
+            $values = filter_var_array($values, $options);
+        }
+        if (empty($values))
+            $values = ['page' => false, 'limit' => false];
+
+        if ($values['page'] === false)
+            $values['page'] = 1;
+        if ($values['limit'] === false)
+            $values['limit'] = 10;
+
+        $messages = $this->models->messageModel->getAll($values['page'], $values['limit']);
+        $count = ceil($this->models->messageModel->count() / (float)$values['limit']);
+        if (count($messages))
+            $this->render('find', ['messages' => $messages, 'count' => $count]);
+        else
+            $this->render404();
     }
 }

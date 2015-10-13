@@ -34,7 +34,6 @@ class Controller
 
     protected function render404()
     {
-        echo 'yrd';
         View::render404();
     }
 

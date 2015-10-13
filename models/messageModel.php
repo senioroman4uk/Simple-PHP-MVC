@@ -28,6 +28,22 @@ class messageModel extends Model
         return $result;
     }
 
+    public function getAll($page, $limit)
+    {
+        $from = ($page - 1) * $limit;
+        $to = $page * $limit;
+//        var_dump($page);
+        $sql = "SELECT * FROM Messages LIMIT $from, $to";
+        return $this->executeReaderQuery($sql);
+    }
+
+    public function count()
+    {
+        $sql = "SELECT COUNT(`id`) FROM messages";
+        return $this->executeScalar($sql);
+    }
+
+
     /**
      *
      * @param $row array that contains one row of fetch data

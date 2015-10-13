@@ -56,7 +56,7 @@ class Router
             } else
                 $regex = $regex[0];
 
-            if (preg_match($regex, $_SERVER['REQUEST_URI'])) {
+            if (preg_match($regex, array_shift(explode('?', $_SERVER['REQUEST_URI'])))) {
                 $route = explode('/', $route);
                 if (count($route) != 2)
                     throw new \Exception('error, wrong route parameters, format: <ControllerName>/<ActionName>>');

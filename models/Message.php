@@ -35,6 +35,9 @@ class Message extends ViewModel
     /** @var string */
     private $ip;
 
+    /** @var  string */
+    private $date;
+
     /**
      * @return string
      */
@@ -113,5 +116,21 @@ class Message extends ViewModel
     public function setIp($ip)
     {
         $this->ip = $ip;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
+     * @param string $date
+     */
+    public function setDate($date)
+    {
+        $this->date = $date;
     }
 }
