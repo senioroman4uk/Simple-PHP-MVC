@@ -80,10 +80,10 @@ class MessageController extends Controller
         if ($values['limit'] === false)
             $values['limit'] = 10;
 
-        $messages = $this->models->messageModel->getAll($values['page'], $values['limit']);
+        $messages = $this->models->messageModel->paginate($values['page'], $values['limit'], ['date DESC']);
         $count = ceil($this->models->messageModel->count() / (float)$values['limit']);
         if (count($messages))
-            $this->render('find', ['messages' => $messages, 'count' => $count]);
+            $this->render('find', ['messages' => $messages, 'count' => $count, 'page' => $values['page']]);
         else
             $this->render404();
     }

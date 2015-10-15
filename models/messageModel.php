@@ -19,30 +19,20 @@ class messageModel extends Model
         parent::__construct($host, $username, $password, $database, 'messages');
     }
 
+    /**
+     * @param $entity Message
+     * @return bool
+     * @throws \Exception
+     */
     public function create($entity)
     {
-        $types = $this->processEntityTypes($entity);
+//        $types = $this->processEntityFields($parameters);
         $sql = "INSERT INTO messages(`name`, `message`, `email`, `ip`) VALUES (?, ?, ?, ?)";
-        $result = $this->executeNonQuery($sql, $types, $entity);
+        $result = $this->executeNonQuery($sql, 'ssss',
+            [$entity->getName(), $entity->getMessage(), $entity->getEmail(), $entity->getIp()]);
         $entity->setId($this->connection->insert_id);
         return $result;
     }
-
-    public function getAll($page, $limit)
-    {
-        $from = ($page - 1) * $limit;
-        $to = $page * $limit;
-//        var_dump($page);
-        $sql = "SELECT * FROM Messages LIMIT $from, $to";
-        return $this->executeReaderQuery($sql);
-    }
-
-    public function count()
-    {
-        $sql = "SELECT COUNT(`id`) FROM messages";
-        return $this->executeScalar($sql);
-    }
-
 
     /**
      *

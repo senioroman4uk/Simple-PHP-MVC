@@ -34,7 +34,8 @@ class Controller
 
     protected function render404()
     {
-        View::render404();
+        $data['pages'] = $this->pages;
+        View::render404($data);
     }
 
     /**

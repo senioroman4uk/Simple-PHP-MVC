@@ -7,10 +7,14 @@
             <th>message</th>
             <th>email</th>
             <th>ip</th>
+            <th>date</th>
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($messages as $message): ?>
+        <?php /** @var array $messages
+         * @var models\Message $message
+         */
+        foreach ($messages as $message): ?>
             <tr>
                 <td><?php echo $message->getId() ?></td>
                 <td><?php echo $message->getName() ?></td>
@@ -23,9 +27,6 @@
         </tbody>
     </table>
 
-    <!--    pagination -->
-    <?php for ($i = 0; $i < $count; $i++): ?>
-        <a href="<?php echo '/messages?page=' . ($i + 1) ?>"><?php echo($i + 1) ?></a>
-    <?php endfor ?>
-    <!--    end pagination-->
+
+    <?php self::paginate($page, 10, $count, '/messages?page'); ?>
 </div>

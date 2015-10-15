@@ -56,12 +56,14 @@ class Router
             } else
                 $regex = $regex[0];
 
-            if (preg_match($regex, array_shift(explode('?', $_SERVER['REQUEST_URI'])))) {
+            if (preg_match($regex, array_shift(explode('?', $_SERVER['REQUEST_URI'])), $matches)) {
                 $route = explode('/', $route);
                 if (count($route) != 2)
                     throw new \Exception('error, wrong route parameters, format: <ControllerName>/<ActionName>>');
                 //TODO: pass url params
-                self::execute($route[0], $route[1], ['pages' => $pages]);
+                unset($matches[0]);
+                $matches['pages'] = $pages;
+                self::execute($route[0], $route[1], $matches);
                 return;
             }
         }

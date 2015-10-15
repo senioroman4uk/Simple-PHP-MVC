@@ -15,6 +15,9 @@ abstract class Model
      * @var \mysqli
      */
     protected $connection;
+    /**
+     * @var string
+     */
     protected $table;
 
     protected function __construct($host, $username, $password, $database, $table)
@@ -27,10 +30,46 @@ abstract class Model
         spl_autoload_register([$this, 'loadViewModel']);
     }
 
-    public function getAll()
+    protected function processFieldsArray($str, $fields)
     {
-        $sql = "SELECT * FROM {$this->table}";
+        if (!empty($fields)) {
+            $orderBy = 'ORDER BY ';
+            foreach ($fields as $field)
+                if (!empty($field) && is_string($field))
+                    $str .= $field . ', ';
+        } else
+            return '';
+        return trim($str, ', ');
+    }
+
+    public function getAll($order = [])
+    {
+        $orderBy = $this->processFieldsArray('ORDER BY ', $order);
+
+        $sql = "SELECT * FROM {$this->table} $orderBy";
         return $this->executeReaderQuery($sql);
+    }
+
+    public function getOne($id)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE id = ?";
+        $results = $this->executeReaderQuery($sql, 'i', [$id]);
+        return count($results) > 0 ? $results[0] : null;
+    }
+
+    //TODO: escape?
+    public function paginate($page, $limit, $order = [])
+    {
+        $orderBy = $this->processFieldsArray('ORDER BY ', $order);
+        $offset = ($page - 1) * $limit;
+        $sql = "SELECT * FROM {$this->table} $orderBy LIMIT $offset, $limit";
+        return $this->executeReaderQuery($sql);
+    }
+
+    public function count()
+    {
+        $sql = "SELECT COUNT(`id`) FROM `{$this->table}`";
+        return $this->executeScalar($sql);
     }
 
     public abstract function create($entity);
@@ -58,15 +97,15 @@ abstract class Model
     /**
      * for queries that do not return values
      */
-    protected function executeNonQuery($sql, $types = null, $entity = null)
+    protected function executeNonQuery($sql, $types = null, $parameters = [])
     {
-        if ($query = $this->prepareQuery($sql, $types, $entity)) {
+        if ($query = $this->prepareQuery($sql, $types, $parameters)) {
             if ($query->execute()) {
                 $result = $query->affected_rows > 0;
                 $query->close();
                 return $result;
             } else
-                throw new \Exception("error occurred while executing query " . $this->connection->error);
+                throw new \Exception("error occurred while executing query " . $query->error);
         } else
             throw new \Exception("error occurred while preparing query " . $this->connection->error);
     }
@@ -85,20 +124,17 @@ abstract class Model
                 return $results;
             } else {
                 $query->close();
-                throw new \Exception("error occurred while executing query " . $this->connection->error);
+                throw new \Exception("error occurred while executing query " . $query->error);
             }
         } else
             throw new \Exception("error occurred while preparing query " . $this->connection->error);
     }
 
-    protected function prepareQuery($sql, $types, $entity, $processId = false)
+    protected function prepareQuery($sql, $types, $parameters)
     {
         if ($query = $this->connection->prepare($sql)) {
-            if (!empty($entity) && !empty($types)) {
-                $parameters = (array)$entity;
+            if (!empty($parameters) && !empty($types)) {
                 $parameters = array_map([$this->connection, 'escape_string'], $parameters);
-                if (!$processId)
-                    unset($parameters["\0" . get_class($entity) . "\0id"]);
                 $refs = [$types];
                 foreach ($parameters as $key => $param)
                     $refs[] = &$parameters[$key];
@@ -116,27 +152,29 @@ abstract class Model
      */
     protected abstract function processReaderResultsRow($row);
 
-    protected function processEntityTypes($entity, $withId = false)
-    {
-        $allowedTypes = ['i', 'd', 's', 'b'];
-        $result = '';
-        $refClass = new \ReflectionClass($entity);
-        foreach ($refClass->getProperties() as $property) {
-            if ($property->name === 'id' && !$withId)
-                continue;
-
-            $doc = $property->getDocComment();
-            if (!$doc)
-                throw new \RuntimeException("viewModel properties must be documented with phpdoc @var!");
-
-            $matches = [];
-            if (preg_match('/@var (\S+)/', $doc, $matches) && in_array($matches[1][0], $allowedTypes))
-                $result .= $matches[1][0];
-            else
-                throw new \RuntimeException("cannot get type from phpdoc comment");
-        }
-        return $result;
-    }
+    // TODO: rethink
+//    protected function processEntityFields($entity)
+//    {
+//        $allowedTypes = ['i', 'd', 's', 'b'];
+//        $skipedTypes = ['a'];
+//        $result = '';
+//        $refClass = new \ReflectionClass($entity);
+//
+//        foreach ($refClass->get() as $property) {
+//            $doc = $property->getDocComment();
+//            if (!$doc)
+//                throw new \RuntimeException("viewModel properties must be documented with phpdoc @var!");
+//
+//            $matches = [];
+//            if (preg_match('/@var (\S+)/', $doc, $matches) && in_array($matches[1][0], $allowedTypes))
+//                $result .= $matches[1][0];
+//            elseif (in_array($matches[1][0], $skipedTypes))
+//                continue;
+//            else
+//                throw new \RuntimeException("cannot get type from phpdoc comment");
+//        }
+//        return $result;
+//    }
 
     protected function loadViewModel($vmName)
     {

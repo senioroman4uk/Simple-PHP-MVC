@@ -25,4 +25,11 @@ class View
         header("HTTP/1.0 404 Not Found", true, 404);
         self::render('/404', null, $data);
     }
+
+    static function paginate($page, $limit, $count, $link)
+    {
+        $n = min(max(min($page + 5, $count), $limit), $count);
+        $i = max(min(max($page - 5, 0), $n - $limit), 0);
+        return include(PROJECT_DIR . '/views/pagination.php');
+    }
 }

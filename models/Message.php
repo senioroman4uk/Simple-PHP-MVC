@@ -34,8 +34,7 @@ class Message extends ViewModel
     private $email;
     /** @var string */
     private $ip;
-
-    /** @var  string */
+    /** @var string */
     private $date;
 
     /**
@@ -71,7 +70,7 @@ class Message extends ViewModel
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getId()
     {
@@ -79,7 +78,7 @@ class Message extends ViewModel
     }
 
     /**
-     * @param mixed $id
+     * @param int $id
      */
     public function setId($id)
     {
