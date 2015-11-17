@@ -11,12 +11,10 @@ namespace models;
 
 use Core\ViewModel;
 
-class News extends ViewModel
+class News
 {
     public function __construct($row)
     {
-        parent::__construct();
-
         foreach ($row as $key => $value)
             if (property_exists($this, $key))
                 $this->$key = $value;

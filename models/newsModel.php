@@ -27,8 +27,7 @@ class newsModel extends Model
     public function paginateByType($type, $page, $limit)
     {
         $from = ($page - 1) * $limit;
-        $to = $page * $limit;
-        $sql = "SELECT * FROM {$this->table} WHERE `type` = $type ORDER BY `date` DESC LIMIT $from, $to";
+        $sql = "SELECT * FROM {$this->table} WHERE `type` = $type ORDER BY `date` DESC LIMIT $from, $limit";
 
         return $this->executeReaderQuery($sql);
     }
