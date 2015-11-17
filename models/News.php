@@ -9,8 +9,6 @@
 namespace models;
 
 
-use Core\ViewModel;
-
 class News
 {
     public function __construct($row)

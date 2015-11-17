@@ -9,8 +9,6 @@
 namespace models;
 
 
-use Core\ViewModel;
-
 class Message
 {
     public function __construct($row)
