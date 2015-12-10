@@ -10,11 +10,16 @@ function Pager() {
         history.pushState({href: url}, document.title, url);
     };
 
+    function updateHeader() {
+        $.get('/header', 'html', function (html) {
+            $('header').remove();
+            $('#container').prepend(html);
+        })
+    }
+
     window.history.replaceState({'href': initialURL}, document.title, window.location.href);
 
     $(window).bind("popstate", function (e) {
-        //e.preventDefault();
-
         var initialPop = !popped && location.href == initialURL;
         popped = true;
         if (initialPop)
@@ -22,12 +27,6 @@ function Pager() {
 
         currentXhr = $.ajax(e.originalEvent.state.href.replace('html', 'json'), historyAjaxOptions);
     });
-
-    var unbind = function () {
-        $(window).unbind('popstate');
-        $(document).off('click', 'a');
-    };
-
 
     var inProcess = false;
     var currentXhr = null;
@@ -46,17 +45,10 @@ function Pager() {
 
     var historyAjaxOptions = {
         dataType: 'json',
-        beforeSend: function () {
-            inProcess = true;
-        },
-
-        complete: function () {
-            inProcess = false;
-            currentXhr = null;
-        },
+        beforeSend: redirectAjaxOptions['beforeSend'],
+        complete: redirectAjaxOptions['complete'],
 
         success: function (data) {
-            unbind();
             $('#content').html(data.content);
             $("html, body").animate({scrollTop: "0px"});
         }
@@ -67,25 +59,19 @@ function Pager() {
         linkClickHandler: function (event) {
             if (this.href.match(/\/dashboard$/))
                 return;
-
             event.preventDefault();
-
             if (currentXhr)
                 currentXhr.abort();
 
             redirectAjaxOptions['success'] = function (href) {
                 return function (data) {
-                    unbind();
                     updateHistory(href);
-                    //console.log(data);
                     $('#content').html(data.content);
-                    //document.title = data.title;
                     $("html, body").animate({scrollTop: "0px"});
                 }
             }(this.href);
             currentXhr = $.ajax(this.href.replace('html', 'json'), redirectAjaxOptions);
         },
-
         logoutHandler: function (event) {
             event.preventDefault();
             var that = this;
@@ -94,33 +80,15 @@ function Pager() {
             if (currentXhr)
                 currentXhr.abort();
 
-            $.ajax(that.href, {
-                dataType: 'json',
+            $.ajax(that.href.replace('html', 'json'), {
+                dataType: 'html',
                 type: 'GET',
-                data: {isAjax: true},
                 success: function (data) {
-                    unbind();
-
-                    document.title = data.title;
-                    history.pushState({}, document.title, '/');
-                    updateHeader();
-                    $('#content').html(data.html);
-                },
-                error: function (xhr) {
-                    $('.alert').remove();
-                    try {
-                        xhr.responseJSON.errors.forEach(function (error) {
-                            $(form).prepend('<div class="alert alert-danger">' + error + '</div>')
-                        });
-                    } catch (e) {
-                        $(form).prepend('<div class="alert alert-danger">Unknown error occurred</div>')
-                    }
+                    $('.login-partial').replaceWith(data);
                 }
             });
-
         },
-
-        unbind: unbind
+        updateHeader: updateHeader
     }
 }
 

@@ -55,19 +55,30 @@ class MessageController extends Controller
             $errors['message'] = 'Too small, min length 6';
         }
 
+        $returnAjax = isset($_REQUEST['ajax']) && $_REQUEST['ajax'] === 'true';
+
         if (!$hadError) {
             $values['ip'] = $this->getRealIpAddress();
             if ($this->models->messageModel->create(new Message($values)))
-                $this->render('/contact', ['name' => $values['name'], 'previousValues' => []]);
+                $data = ['name' => $values['name'], 'previousValues' => []];
             else
-                $this->render('/contact', ['errors' => ['database' => 'saving of message failed']]);
+                $data = ['errors' => ['database' => 'saving of message failed']];
+        } else {
+            header("Bad Request", true, 400);
+            $data = ['errors' => $errors, 'previousValues' => $values];
+        }
+
+        if ($returnAjax) {
+            header("Content-Type: application/json");
+            echo json_encode($data);
         } else
-            $this->render('/contact', ['errors' => $errors, 'previousValues' => $values]);
+            $this->render('/contact', $data);
     }
 
     public function createAjax()
     {
-        echo json_encode(['content' => View::partial('contact')]);
+        $content = View::partial('contact');
+        echo json_encode(['content' => $content]);
     }
 
     public function find()

@@ -1,5 +1,5 @@
-<td width="580" height="320" bgcolor="#4F4F4F" valign="top">
-    <form action="/signup" method="post">
+<script type="text/javascript" src="/js/userHandler.js"></script>
+<form action="/signup" method="post" name="userForm">
         <label>Name</label>
         <input name="name" value="">
         <br>
@@ -19,4 +19,3 @@
             echo $key . ':' . $message;
         }
     ?>
-</td>

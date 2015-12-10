@@ -23,14 +23,30 @@ class PagesController extends Controller
 
     public function index($type)
     {
+        $page = $this->models->PageModel->findOneByName('home');
+        if (!isset($page)) {
+            $this->render404();
+            return;
+        }
+
         switch ($type) {
             case 'html':
-                $page = $this->models->PageModel->findOneByName('home');
-                if (!isset($page)) {
-                    $this->render404();
-                    return;
-                }
                 $this->render('/page', ['content' => $page->getContent()]);
+                break;
+            case 'json':
+                $variables = (array)$page;
+                $json = [];
+
+                foreach ($variables as $key => $variable) {
+                    $oldKey = $key;
+                    $key = str_replace("\0models\\Page\0", "", $key);
+                    $json[$key] = $variables[$oldKey];
+                }
+
+                $json['content'] = View::partial("page", ['content' => $page->getContent()]);
+                $json['header'] = View::partial('loginpartial', ['user' => $this->user]);
+                header("Content-Type: application/json");
+                echo json_encode($json);
                 break;
             default:
                 $this->render404();
@@ -83,7 +99,7 @@ class PagesController extends Controller
                 }
 
                 header("Content-Type: application/xml");
-                echo $xml->asXML();
+                echo $xml->saveXML();
                 break;
             case 'json':
                 $variables = (array)$page;
@@ -109,5 +125,10 @@ class PagesController extends Controller
         $items = $this->models->PageModel->getAllForXML();
         header("Content-Type: application/rss+xml");
         $this->render("/rss", ["items" => $items], false);
+    }
+
+    public function header()
+    {
+        echo View::partial("header");
     }
 }

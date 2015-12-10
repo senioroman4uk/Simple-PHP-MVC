@@ -1,10 +1,4 @@
-<!--<td width="580" height="320" bgcolor="#4F4F4F" valign="top">-->
-<script type="text/javascript">
-    $(document).ready(function () {
-        var pager = new Pager();
-        $(document).on('click', 'a', pager.linkClickHandler);
-    })
-</script>
+<script type="text/javascript" src="/js/formHandler.js"></script>
 <table border="0" cellpadding="15" cellspacing="50" align="center">
     <tr>
         <td align="centr">
@@ -12,7 +6,7 @@
                 <h1>Contacts</h1>
             </font>
 
-            <form method="post" action="/contact">
+            <form method="post" action="/contact" name="activityForm">
                 Name:<br/>
                 <input type="text" name="name" value="<?php echo isset($user) ? $user->getName() : '' ?>"/><br/><br/>
                 Mail:<br/>
@@ -30,4 +24,3 @@
         </td>
     </tr>
 </table>
-<!--</td>-->

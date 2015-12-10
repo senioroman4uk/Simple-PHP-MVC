@@ -10,6 +10,7 @@ namespace controllers;
 
 
 use Core\Controller;
+use Core\View;
 use models\User;
 
 class UserController extends Controller
@@ -23,8 +24,14 @@ class UserController extends Controller
 
     public function login()
     {
+        $returnJson = isset($_REQUEST['ajax']) && $_REQUEST['ajax'] === 'true';
+
         if (isset($this->user)) {
-            header('Location : /index.html');
+            if ($returnJson) {
+                header('Location : /index.json', true, 301);
+            } else {
+                header('Location : /index.html', true, 301);
+            }
             exit(0);
         }
         $options = [
@@ -43,31 +50,54 @@ class UserController extends Controller
             $values['password'] = "";
 
         $user = $this->models->UsersModel->findOneByName($values['name']);
-        if (!$user)
-            $this->render('signin', ['errors' => ['Authorization' => 'Check your name and password']]);
-        else {
+
+        $data = null;
+
+        if (!$user) {
+            $data = ['errors' => ['Authorization' => 'Check your name and password']];
+        } else {
             $values['password'] = hash('sha256', $values['password'] . $user->getSalt());
             if ($values['password'] === $user->getPassword()) {
                 setcookie('user_id', $user->getId(), time() + 60 * 60 * 24, '/');
-                header('Location: /index.html');
+
+                if ($returnJson) {
+                    header("Content-Type: application/json");
+                    echo json_encode(['header' => View::partial('loginpartial', ['user' => $user])]);
+                } else
+                    header('Location : /index.html', true, 301);
                 return;
-            } else $this->render('signin', ['errors' => ['Authorization' => 'Failed']]);
+            } else {
+                $data = ['errors' => ['Authorization' => 'Failed']];
+            }
         }
 
+        if (isset($data)) {
+            if ($returnJson) {
+                header("Content-Type: application/json");
+                header("Bad Request", true, 400);
+                echo json_encode($data);
+            } else
+                $this->render('signin', $data);
+        }
     }
 
-    public function signUp()
+    public function signUp($type)
     {
         if (isset($this->user)) {
-            header('Location : /index.html');
+            header('Location : /index.html', true, 301);
             exit(0);
         }
 
-        $this->render('signup');
+        if ($type === 'json')
+            echo json_encode(['content' => View::partial('user/signup')]);
+        else
+            $this->render('signup');
     }
 
     public function create()
     {
+        $returnAjax = isset($_REQUEST['ajax']) && $_REQUEST['ajax'] === 'true';
+
         $options = [
             "name" => ["filter" => FILTER_SANITIZE_STRING],
             "email" => ["filter" => FILTER_SANITIZE_EMAIL],
@@ -104,16 +134,34 @@ class UserController extends Controller
 
 
         if ($hadError) {
-            $this->render('signup', ['errors' => $errors, 'previousValues' => $values]);
+            if (!$returnAjax)
+                $this->render('signup', ['errors' => $errors, 'previousValues' => $values]);
+            else {
+                header("Bad Request", true, 400);
+                header("Content-Type: application/json");
+                echo json_encode($errors);
+            }
             return;
         }
 
         if ($values['password'] !== $values['repeatPassword']) {
-            $this->render('signup', ['errors' => ['password' => 'Passwords do not match'], 'previousValues' => $values]);
+            if (!$returnAjax)
+                $this->render('signup', ['errors' => ['password' => 'Passwords do not match'], 'previousValues' => $values]);
+            else {
+                header("Bad Request", true, 400);
+                header("Content-Type: application/json");
+                echo json_encode(['password' => 'Passwords do not match']);
+            }
         }
 
         if ($this->models->UsersModel->findOneByName($values['name'])) {
-            $this->render('signup', ['errors' => ['name' => 'Already exists'], 'previousValues' => $values]);
+            if (!$returnAjax)
+                $this->render('signup', ['errors' => ['name' => 'Already exists'], 'previousValues' => $values]);
+            else {
+                header("Bad Request", true, 400);
+                header("Content-Type: application/json");
+                echo json_encode(['name' => 'Already exists']);
+            }
             return;
         } else {
             $oldValues = $values;
@@ -124,10 +172,19 @@ class UserController extends Controller
             $user = $this->models->UsersModel->create(new User($values));
             if (isset($user)) {
                 setcookie('user_id', $user->getId(), time() + 60 * 60 * 24, '/');
-                header('Location: /index.html');
+                if (!$returnAjax)
+                    header('Location: /index.html', true, 301);
+                else
+                    header("Location: /index.json", true, 301);
                 return;
             } else {
-                $this->render('signup', ['errors' => ['Database' => 'Saving Failed'], 'previousValues' => $oldValues]);
+                if (!$returnAjax)
+                    $this->render('signup', ['errors' => ['Database' => 'Saving Failed'], 'previousValues' => $oldValues]);
+                else {
+                    header("Bad Request", true, 400);
+                    header("Content-Type: application/json");
+                    echo json_encode(['Database' => 'Saving Failed']);
+                }
             }
 
         }
@@ -138,10 +195,15 @@ class UserController extends Controller
         $this->render('signin');
     }
 
-    public function signout()
+    public function signout($type)
     {
         setcookie("user_id", "", time() - 3600);
-        header('Location: /index.html');
+        $this->user = null;
+
+        if ($type === 'html')
+            header('Location: /index.' . $type, true, 301);
+        else
+            echo View::partial("loginpartial", ['user' => $this->user]);
 
     }
 }

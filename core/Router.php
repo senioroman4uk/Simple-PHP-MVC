@@ -76,9 +76,11 @@ class Router
                 list($user, $permission) = $this->checkPermission($route, $pages, $userModel);
                 if (!$permission && isset($user)) {
                     //$_SESSION["errors"] = ["You dom't have enough privileges to view this page"];
+                    header("HTTP/1.1 403 Forbidden");
                     header("Location: /403");
                     exit(0);
                 } else if (!$permission && !isset($user)) {
+                    header("HTTP/1.1 301 Moved Permanently");
                     header('Location: /signin');
                     exit(0);
                 }
@@ -90,6 +92,7 @@ class Router
                 unset($matches[0]);
 
 
+                usort($menuPages, array('\models\Page', "comparator"));
                 $matches['_pages'] = $menuPages;
                 $matches['_user'] = $user == true && is_object($user) ? $user : null;
                 self::execute($route[0], $route[1], $matches);

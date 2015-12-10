@@ -6,6 +6,14 @@
     <script type="text/javascript" src="/js/jquery-1.11.3.min.js"></script>
     <script type="text/javascript" src="/js/pager.js"></script>
     <title>News</title>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var pager = new Pager();
+            $(document).on('click', 'a:not(.logoutButton)', pager.linkClickHandler);
+            $(document).on('click', 'a.logoutButton', pager.logoutHandler);
+        })
+    </script>
+    <script type="text/javascript" src="/js/sessionHandler.js"></script>
 </head>
 <body style="width: 100%; height: 768px;  background: url(/img/111.jpg); background-size: cover;">
 <table border="0" cellpadding="0" cellspacing="0" align="center">

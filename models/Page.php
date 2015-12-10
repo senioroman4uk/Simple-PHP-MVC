@@ -45,6 +45,11 @@ class Page
     /**
      * @var int
      */
+    private $menuOrder;
+
+    /**
+     * @var int
+     */
     private $show;
 
     /**
@@ -145,6 +150,22 @@ class Page
     /**
      * @return int
      */
+    public function getMenuOrder()
+    {
+        return $this->menuOrder;
+    }
+
+    /**
+     * @param int $menuOrder
+     */
+    public function setMenuOrder($menuOrder)
+    {
+        $this->menuOrder = $menuOrder;
+    }
+
+    /**
+     * @return int
+     */
     public function getShow()
     {
         return $this->show;
@@ -182,5 +203,15 @@ class Page
         return $this->content;
     }
 
-
+    /**
+     * @param $a Page
+     * @param $b Page
+     * @return bool
+     */
+    public static function comparator($a, $b)
+    {
+        $a_order = $a->getMenuOrder() == null ? 99 : $a->getMenuOrder();
+        $b_order = $b->getMenuOrder() == null ? 99 : $b->getMenuOrder();
+        return $a_order > $b_order;
+    }
 }
