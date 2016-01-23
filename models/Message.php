@@ -33,6 +33,9 @@ class Message
     /** @var string */
     private $date;
 
+    /** @var  string */
+    private $answer;
+
     /**
      * @return string
      */
@@ -127,5 +130,21 @@ class Message
     public function setDate($date)
     {
         $this->date = $date;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnswer()
+    {
+        return $this->answer;
+    }
+
+    /**
+     * @param string $answer
+     */
+    public function setAnswer($answer)
+    {
+        $this->answer = $answer;
     }
 }

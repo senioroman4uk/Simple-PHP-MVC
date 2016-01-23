@@ -10,7 +10,6 @@ namespace models;
 
 
 use Core\Model;
-use Core\ViewModel;
 
 class pageModel extends Model
 {
@@ -19,9 +18,15 @@ class pageModel extends Model
     /**
      * pageModel constructor.
      */
-    protected function __construct($host, $username, $password, $database)
+    public function __construct($host, $username, $password, $database)
     {
         parent::__construct($host, $username, $password, $database, 'pages');
+    }
+
+    public function getAllForXml()
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE system = 0 AND access = 1 ORDER BY `order` LIMIT 10";
+        return $this->executeReaderQuery($sql);
     }
 
     public static function getInstance($host, $username, $password, $database)
@@ -32,7 +37,7 @@ class pageModel extends Model
         return self::$instance;
     }
 
-    public function getAll()
+    public function getAll($order = [])
     {
         $sql = "SELECT * FROM {$this->table} ORDER BY `order`";
         return $this->executeReaderQuery($sql);
@@ -42,15 +47,76 @@ class pageModel extends Model
     /**
      *
      * @param $row array that contains one row of fetch data
-     * @return ViewModel
+     * @return \models\Page
      */
     protected function processReaderResultsRow($row)
     {
         return new Page($row);
     }
 
+    /**
+     * @param $entity \models\Page
+     * @return bool
+     * @throws \Exception
+     */
     public function create($entity)
     {
-        // TODO: Implement create() method.
+        $sql = "INSERT INTO pages(`name`, access, link, route, `order`, `show`, system, content, menuOrder, permalink)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        return $this->executeNonQuery($sql, 'sissisisis', [
+            $entity->getName(),
+            $entity->getAccess(),
+            $entity->getLink(),
+            $entity->getRoute(),
+            $entity->getOrder(),
+            $entity->getShow(),
+            $entity->getSystem(),
+            $entity->getContent(),
+            $entity->getMenuOrder(),
+            $entity->getPermalink(),
+        ]);
+    }
+
+    public function findOneByName($name)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE `permalink` = ? LIMIT 1";
+        $results = $this->executeReaderQuery($sql, 's', [$name]);
+
+        return count($results) > 0 ? $results[0] : null;
+    }
+
+    /**
+     * @param $entity \models\Page
+     * @return bool
+     * @throws \Exception
+     */
+    public function update($entity) {
+        $sql = "UPDATE pages
+                set name = ?,
+                access = ?,
+                link = ?,
+                route = ?,
+                `order` = ?,
+                `show` = ?,
+                system = ?,
+                menuOrder = ?,
+                content = ?,
+                permalink = ?
+         WHERE id = ?";
+
+        return $this->executeNonQuery($sql, 'sissiiisssi', [
+            $entity->getName(),
+            $entity->getAccess(),
+            $entity->getLink(),
+            $entity->getRoute(),
+            $entity->getOrder(),
+            $entity->getShow(),
+            $entity->getSystem(),
+            $entity->getMenuOrder(),
+            $entity->getContent(),
+            $entity->getPermalink(),
+            $entity->getId(),
+        ]);
     }
 }

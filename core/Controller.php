@@ -7,11 +7,29 @@ class Controller
 {
     protected $models;
     protected $pages = [];
+    protected $user = null;
 
     function __construct()
     {
         $this->models = new \stdClass();
     }
+
+    /**
+     * @return null
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * @param null $user
+     */
+    public function setUser($user)
+    {
+        $this->user = $user;
+    }
+
 
     /**
      * @param array $pages
@@ -25,17 +43,24 @@ class Controller
      * @param $view string, name or absolute pass to view
      * @param array | null $data , data that have to be passed to view
      */
-    protected function render($view, $data = [])
+    protected function render($view, $data = [], $layout = null)
     {
+//        var_dump($this->user);
         //passing pages to every view that has to be rendered
         $data['pages'] = $this->pages;
-        View::render($view, $this->getName(), $data);
+        $data['user'] = $this->user;
+        View::render($view, $this->getName(), $data, $layout);
     }
 
     protected function render404()
     {
         $data['pages'] = $this->pages;
-        View::render404($data);
+        $data['user'] = $this->user;
+        View::render404(null, $data);
+    }
+
+    protected function partial($viewName, $data = []) {
+        return View::partial($viewName, $data);
     }
 
     /**
@@ -85,5 +110,40 @@ class Controller
             $ip = $_SERVER['REMOTE_ADDR'];
         }
         return $ip;
+    }
+
+    /**
+     * Function to create and display error and success messages
+     * @access public
+     * @param string session name
+     * @param string message
+     * @param string display class
+     * @return string message
+     */
+    function addFlash($name = '', $message = '', $class = 'success')
+    {
+        //We can only do something if the name isn't empty
+        if (!empty($name)) {
+            //No message, create it
+            if (!empty($message) && empty($_SESSION[$name]))
+                if (!empty($_SESSION[$name])) {
+                    unset($_SESSION[$name]);
+                }
+            if (!empty($_SESSION[$name . '_class'])) {
+                unset($_SESSION[$name . '_class']);
+            }
+
+            $_SESSION[$name] = $message;
+            $_SESSION[$name . '_class'] = $class;
+        }
+    }
+
+    protected function echo_json_encode($data, $options = 0, $depth = 512)
+    {
+        header("Content-Type: application/json");
+        if (version_compare(PHP_VERSION, '5.5.0') >= 0)
+            echo json_encode($data, $options, $depth);
+        else
+            echo json_encode($data, $options);
     }
 }

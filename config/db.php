@@ -1,9 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Vladyslav
- * Date: 10.10.2015
- * Time: 0:42
- */
-
-$config['database'] = ['host' => '127.0.0.1', 'username' => 'root', 'password' => 'root', 'database' => 'news'];
+$config['database'] = [
+    'host' => $_ENV["OPENSHIFT_MYSQL_DB_HOST"],
+    'username' => $_ENV["OPENSHIFT_MYSQL_DB_USERNAME"],
+    'password' => $_ENV["OPENSHIFT_MYSQL_DB_PASSWORD"],
+    'database' => 'kaktus'
+];

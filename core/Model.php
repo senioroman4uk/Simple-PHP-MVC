@@ -24,6 +24,9 @@ abstract class Model
     {
         $this->table = $table;
         $this->connection = new \mysqli($host, $username, $password, $database);
+
+        $this->connection->set_charset("utf8");
+
         if ($this->connection->errno)
             throw new \Exception('mysqlli error: ' . $this->connection->error);
         //registering autoloading of viewModel
@@ -33,7 +36,6 @@ abstract class Model
     protected function processFieldsArray($str, $fields)
     {
         if (!empty($fields)) {
-            $orderBy = 'ORDER BY ';
             foreach ($fields as $field)
                 if (!empty($field) && is_string($field))
                     $str .= $field . ', ';
@@ -81,10 +83,13 @@ abstract class Model
     {
         if ($query = $this->prepareQuery($sql, $types, $parameters)) {
             if ($query->execute()) {
-                $result = $query->get_result();
+				if (method_exists($query, 'get_result'))
+                    $result = $query->get_result();
+                else
+                    $result = iimysqli_result::iimysqli_stmt_get_result($query);
                 $row = $result->fetch_assoc();
-
-                $result->close();
+				if (method_exists($query, 'get_result'))
+					$result->close();
                 return array_values($row)[0];
             } else {
                 $query->close();
@@ -101,7 +106,7 @@ abstract class Model
     {
         if ($query = $this->prepareQuery($sql, $types, $parameters)) {
             if ($query->execute()) {
-                $result = $query->affected_rows > 0;
+                $result = $query->affected_rows > 0 || $query->sqlstate === '00000';
                 $query->close();
                 return $result;
             } else
@@ -116,11 +121,16 @@ abstract class Model
         if ($query = $this->prepareQuery($sql, $types, $parameters)) {
             $results = [];
             if ($query->execute()) {
-                $result = $query->get_result();
-                while ($row = $result->fetch_assoc())
+                if (method_exists($query, 'get_result'))
+                    $result = $query->get_result();
+                else
+                    $result = iimysqli_result::iimysqli_stmt_get_result($query);
+                while ($row = $result->fetch_assoc()) {
                     array_push($results, $this->processReaderResultsRow($row));
-
-                $result->close();
+					
+				}
+				if (method_exists($query, 'get_result'))
+					$result->close();
                 return $results;
             } else {
                 $query->close();
@@ -134,7 +144,7 @@ abstract class Model
     {
         if ($query = $this->connection->prepare($sql)) {
             if (!empty($parameters) && !empty($types)) {
-                $parameters = array_map([$this->connection, 'escape_string'], $parameters);
+//                $parameters = array_map([$this->connection, 'escape_string'], $parameters);
                 $refs = [$types];
                 foreach ($parameters as $key => $param)
                     $refs[] = &$parameters[$key];
@@ -152,32 +162,25 @@ abstract class Model
      */
     protected abstract function processReaderResultsRow($row);
 
-    // TODO: rethink
-//    protected function processEntityFields($entity)
-//    {
-//        $allowedTypes = ['i', 'd', 's', 'b'];
-//        $skipedTypes = ['a'];
-//        $result = '';
-//        $refClass = new \ReflectionClass($entity);
-//
-//        foreach ($refClass->get() as $property) {
-//            $doc = $property->getDocComment();
-//            if (!$doc)
-//                throw new \RuntimeException("viewModel properties must be documented with phpdoc @var!");
-//
-//            $matches = [];
-//            if (preg_match('/@var (\S+)/', $doc, $matches) && in_array($matches[1][0], $allowedTypes))
-//                $result .= $matches[1][0];
-//            elseif (in_array($matches[1][0], $skipedTypes))
-//                continue;
-//            else
-//                throw new \RuntimeException("cannot get type from phpdoc comment");
-//        }
-//        return $result;
-//    }
-
     protected function loadViewModel($vmName)
     {
         require_once(PROJECT_DIR . "/$vmName.php");
+    }
+
+    protected function getInsertId()
+    {
+        return $this->connection->insert_id;
+    }
+
+    public function delete($id) {
+        //language=sql
+        $sql = "DELETE FROM {$this->table} WHERE id = ?;";
+
+        return $this->executeNonQuery($sql, "i", [$id]);
+    }
+	
+	 public function close() {
+        if(isset($this->connection))
+            $this->connection->close();
     }
 }

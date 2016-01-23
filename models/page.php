@@ -13,8 +13,6 @@ class Page
 {
     public function __construct($row)
     {
-        parent::__construct();
-
         foreach ($row as $key => $value)
             if (property_exists($this, $key))
                 $this->$key = $value;
@@ -47,7 +45,48 @@ class Page
     /**
      * @var int
      */
+    private $menuOrder;
+
+    /**
+     * @var int
+     */
     private $show;
+
+    /**
+     * @var int
+     */
+    private $access;
+
+    /**
+     * @var int
+     */
+    private $system;
+
+    /**
+     * @var string
+     */
+    private $content;
+
+    private $date;
+
+    private $permalink;
+
+    /**
+     * @return mixed
+     */
+    public function getPermalink()
+    {
+        return $this->permalink;
+    }
+
+    /**
+     * @param mixed $permalink
+     */
+    public function setPermalink($permalink)
+    {
+        $this->permalink = $permalink;
+    }
+
 
     /**
      * @return int
@@ -132,6 +171,22 @@ class Page
     /**
      * @return int
      */
+    public function getMenuOrder()
+    {
+        return $this->menuOrder;
+    }
+
+    /**
+     * @param int $menuOrder
+     */
+    public function setMenuOrder($menuOrder)
+    {
+        $this->menuOrder = $menuOrder;
+    }
+
+    /**
+     * @return int
+     */
     public function getShow()
     {
         return $this->show;
@@ -143,5 +198,66 @@ class Page
     public function setShow($show)
     {
         $this->show = $show;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAccess()
+    {
+        return $this->access;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSystem()
+    {
+        return $this->system;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getContent()
+    {
+        return $this->content;
+    }
+
+    /**
+     * @param $context string
+     */
+    public function setContext($context)
+    {
+        $this->content = $context;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
+     * @param mixed $date
+     */
+    public function setDate($date)
+    {
+        $this->date = $date;
+    }
+
+
+    /**
+     * @param $a Page
+     * @param $b Page
+     * @return bool
+     */
+    public static function comparator($a, $b)
+    {
+        $a_order = $a->getMenuOrder() == null ? 99 : $a->getMenuOrder();
+        $b_order = $b->getMenuOrder() == null ? 99 : $b->getMenuOrder();
+        return $a_order > $b_order;
     }
 }

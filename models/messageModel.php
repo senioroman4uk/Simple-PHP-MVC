@@ -34,6 +34,26 @@ class messageModel extends Model
         return $result;
     }
 
+    public function update($entity)
+    {
+        $sql = "UPDATE messages
+                SET name = ?,
+                message = ?,
+                email = ?,
+                ip = ?,
+                answer = ?
+                WHERE id = ?";
+
+        return $this->executeNonQuery($sql, "sssssi", [
+            $entity->getName(),
+            $entity->getMessage(),
+            $entity->getEmail(),
+            $entity->getIp(),
+            $entity->getAnswer(),
+            $entity->getId()
+        ]);
+    }
+
     /**
      *
      * @param $row array that contains one row of fetch data
